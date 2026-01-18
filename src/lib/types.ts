@@ -45,3 +45,10 @@ export interface SourceMetadata {
 }
 
 export type MetadataStatus = "idle" | "loading" | "ready" | "error";
+
+export interface OutputEstimate {
+  videoKbps: number;
+  audioKbps: number;
+  totalKbps: number;
+  sizeMb?: number;
+}

@@ -22,7 +22,8 @@ pub fn run() {
         .plugin(StoreBuilder::new().build())
         .invoke_handler(tauri::generate_handler![
             conversion::start_conversion,
-            conversion::probe_media
+            conversion::probe_media,
+            conversion::estimate_output
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

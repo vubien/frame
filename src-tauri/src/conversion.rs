@@ -34,7 +34,7 @@ struct ErrorPayload {
     error: String,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ProbeMetadata {
     duration: Option<String>,
@@ -42,6 +42,15 @@ pub struct ProbeMetadata {
     video_codec: Option<String>,
     audio_codec: Option<String>,
     resolution: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OutputEstimate {
+    video_kbps: u32,
+    audio_kbps: u32,
+    total_kbps: u32,
+    size_mb: Option<f64>,
 }
 
 pub fn build_ffmpeg_args(input: &str, output: &str, config: &ConversionConfig) -> Vec<String> {
@@ -262,6 +271,137 @@ pub async fn probe_media(app: AppHandle, file_path: String) -> Result<ProbeMetad
     }
 
     Ok(metadata)
+}
+
+fn parse_duration_to_seconds(duration: Option<&String>) -> Option<f64> {
+    let duration = duration?;
+    let parts: Vec<&str> = duration.split([':', '.']).collect();
+    if parts.len() != 4 {
+        return None;
+    }
+    let hours: f64 = parts[0].parse().ok()?;
+    let minutes: f64 = parts[1].parse().ok()?;
+    let seconds: f64 = parts[2].parse().ok()?;
+    let centiseconds: f64 = parts[3].parse().ok()?;
+    Some(hours * 3600.0 + minutes * 60.0 + seconds + centiseconds / 100.0)
+}
+
+fn parse_resolution_height(resolution: Option<&String>) -> Option<i32> {
+    let resolution = resolution?;
+    let parts: Vec<&str> = resolution.split('x').collect();
+    if parts.len() != 2 {
+        return None;
+    }
+    parts[1].parse().ok()
+}
+
+fn infer_target_height(config: &ConversionConfig, metadata: Option<&ProbeMetadata>) -> i32 {
+    match config.resolution.as_str() {
+        "480p" => 480,
+        "720p" => 720,
+        "1080p" => 1080,
+        "original" => {
+            parse_resolution_height(metadata.and_then(|m| m.resolution.as_ref())).unwrap_or(720)
+        }
+        _ => 720,
+    }
+}
+
+fn base_video_bitrate(height: i32) -> f64 {
+    if height >= 2160 {
+        25000.0
+    } else if height >= 1440 {
+        16000.0
+    } else if height >= 1080 {
+        8000.0
+    } else if height >= 720 {
+        5000.0
+    } else if height >= 480 {
+        2500.0
+    } else {
+        1500.0
+    }
+}
+
+fn codec_scale(codec: &str) -> f64 {
+    match codec.to_lowercase().as_str() {
+        "libx265" | "h265" => 0.65,
+        "vp9" | "libvpx-vp9" => 0.7,
+        "prores" => 1.6,
+        _ => 1.0,
+    }
+}
+
+fn parse_source_bitrate(metadata: Option<&ProbeMetadata>) -> Option<f64> {
+    let raw = metadata?.bitrate.as_ref()?;
+    let digits: String = raw
+        .chars()
+        .filter(|c| c.is_ascii_digit() || *c == '.')
+        .collect();
+    if digits.is_empty() {
+        return None;
+    }
+    digits.parse().ok()
+}
+
+fn crf_scale(crf: u8) -> f64 {
+    let diff = 23i32 - crf as i32;
+    (2f64).powf(diff as f64 / 6.0)
+}
+
+fn audio_bitrate(codec: &str) -> f64 {
+    match codec.to_lowercase().as_str() {
+        "aac" => 128.0,
+        "ac3" => 192.0,
+        "libopus" => 96.0,
+        "mp3" => 128.0,
+        _ => 128.0,
+    }
+}
+
+fn is_audio_only_container(container: &str) -> bool {
+    matches!(container.to_lowercase().as_str(), "mp3")
+}
+
+#[command]
+pub async fn estimate_output(
+    config: ConversionConfig,
+    metadata: Option<ProbeMetadata>,
+) -> Result<OutputEstimate, String> {
+    let metadata_ref = metadata.as_ref();
+    let audio_only = is_audio_only_container(&config.container);
+
+    let mut video_kbps = if audio_only {
+        0.0
+    } else {
+        let height = infer_target_height(&config, metadata_ref);
+        let mut kbps = parse_source_bitrate(metadata_ref)
+            .unwrap_or_else(|| base_video_bitrate(height) * codec_scale(&config.video_codec));
+        kbps *= crf_scale(config.crf);
+        if kbps < 400.0 {
+            kbps = 400.0;
+        }
+        kbps
+    };
+
+    let audio_kbps = if audio_only || metadata_ref.and_then(|m| m.audio_codec.as_ref()).is_some() {
+        audio_bitrate(&config.audio_codec)
+    } else {
+        0.0
+    };
+
+    let total_kbps = video_kbps + audio_kbps;
+
+    let size_mb = parse_duration_to_seconds(metadata_ref.and_then(|m| m.duration.as_ref()))
+        .map(|seconds| (total_kbps * seconds) / 8.0 / 1024.0)
+        .filter(|size| *size > 0.5);
+
+    Ok(OutputEstimate {
+        video_kbps: video_kbps.round() as u32,
+        audio_kbps: audio_kbps.round() as u32,
+        total_kbps: total_kbps.round() as u32,
+        size_mb,
+    })
 }
 
 #[cfg(test)]

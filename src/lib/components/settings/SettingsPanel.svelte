@@ -96,6 +96,7 @@
                 {config}
                 {disabled}
                 {outputName}
+                metadata={metadata}
                 {onUpdate}
                 {onUpdateOutputName}
             />
