@@ -69,7 +69,7 @@
 <div class="h-full">
     {#if !config}
         <div
-            class="border bg-gray-alpha-100 border-gray-alpha-100 rounded-lg h-full flex items-center justify-center px-4 text-center text-[10px] font-mono text-gray-alpha-600 uppercase"
+            class="border bg-gray-alpha-100 border-gray-alpha-100 rounded-lg h-full flex items-center justify-center px-4 text-center text-[10px] font-mono font-medium text-gray-alpha-600 uppercase"
         >
             Select a file to view estimated output.
         </div>
@@ -83,7 +83,7 @@
                 <div class="flex items-center gap-2">
                     <FileText size={12} class="text-gray-alpha-600" />
                     <span
-                        class="text-[10px] font-bold uppercase tracking-widest text-gray-alpha-600"
+                        class="text-[10px] font-medium uppercase tracking-widest text-gray-alpha-600"
                         >Estimated Output</span
                     >
                 </div>

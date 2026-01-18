@@ -64,7 +64,7 @@
         <div class="flex items-center gap-2">
             <Sliders size={12} class="text-gray-alpha-600" />
             <span
-                class="text-[10px] font-bold uppercase tracking-widest text-gray-alpha-600"
+                class="text-[10px] font-medium uppercase tracking-widest text-gray-alpha-600"
                 >Configuration</span
             >
         </div>
@@ -76,7 +76,7 @@
         >
             {#each TABS as tab}
                 <button
-                    class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest rounded border transition-all
+                    class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest font-medium rounded border transition-all
                     {activeTab === tab.id
                         ? 'bg-ds-blue-900/20 text-ds-blue-600 border-ds-blue-600'
                         : 'border-transparent text-gray-alpha-600 hover:bg-gray-alpha-100 hover:text-foreground'}"
