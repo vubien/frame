@@ -98,7 +98,6 @@
                 {config}
                 {disabled}
                 {outputName}
-                {metadata}
                 {onUpdate}
                 {onUpdateOutputName}
             />

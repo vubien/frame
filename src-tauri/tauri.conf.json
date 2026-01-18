@@ -15,8 +15,8 @@
       {
         "title": "relay",
         "width": 1300,
-        "height": 750,
-        "minHeight": 750,
+        "height": 800,
+        "minHeight": 800,
         "minWidth": 1300,
         "resizable": true,
         "fullscreen": false,

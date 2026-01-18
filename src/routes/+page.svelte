@@ -8,6 +8,7 @@
     import FileList from "$lib/components/FileList.svelte";
     import SettingsPanel from "$lib/components/settings/SettingsPanel.svelte";
     import EmptySelection from "$lib/components/EmptySelection.svelte";
+    import EstimatedOutputPanel from "$lib/components/EstimatedOutputPanel.svelte";
     import {
         type FileItem,
         FileStatus,
@@ -296,28 +297,40 @@
             />
 
             <div
-                class="col-span-12 lg:col-span-4 border border-gray-alpha-100 rounded-lg bg-gray-alpha-100 overflow-hidden flex flex-col"
+                class="col-span-12 lg:col-span-4 grid gap-3 h-full grid-rows-[minmax(0,1fr)_200px]"
             >
-                {#if selectedFile}
-                    <SettingsPanel
-                        config={selectedFile.config}
-                        outputName={selectedFile.outputName}
-                        metadata={selectedFile.metadata}
-                        metadataStatus={selectedFile.metadataStatus}
-                        metadataError={selectedFile.metadataError}
-                        {presets}
-                        onUpdate={updateSelectedConfig}
-                        onUpdateOutputName={updateSelectedOutputName}
-                        onApplyPreset={applyPresetToSelection}
-                        onSavePreset={handleSavePreset}
-                        onDeletePreset={handleDeletePreset}
-                        disabled={selectedFile.status ===
-                            FileStatus.CONVERTING ||
-                            selectedFile.status === FileStatus.COMPLETED}
+                <div
+                    class="border border-gray-alpha-100 rounded-lg bg-gray-alpha-100 overflow-hidden h-full min-h-0"
+                >
+                    {#if selectedFile}
+                        <SettingsPanel
+                            config={selectedFile.config}
+                            outputName={selectedFile.outputName}
+                            metadata={selectedFile.metadata}
+                            metadataStatus={selectedFile.metadataStatus}
+                            metadataError={selectedFile.metadataError}
+                            {presets}
+                            onUpdate={updateSelectedConfig}
+                            onUpdateOutputName={updateSelectedOutputName}
+                            onApplyPreset={applyPresetToSelection}
+                            onSavePreset={handleSavePreset}
+                            onDeletePreset={handleDeletePreset}
+                            disabled={selectedFile.status ===
+                                FileStatus.CONVERTING ||
+                                selectedFile.status === FileStatus.COMPLETED}
+                        />
+                    {:else}
+                        <EmptySelection />
+                    {/if}
+                </div>
+
+                <div class="h-full">
+                    <EstimatedOutputPanel
+                        config={selectedFile?.config}
+                        metadata={selectedFile?.metadata}
+                        metadataStatus={selectedFile?.metadataStatus}
                     />
-                {:else}
-                    <EmptySelection />
-                {/if}
+                </div>
             </div>
         </div>
     </div>

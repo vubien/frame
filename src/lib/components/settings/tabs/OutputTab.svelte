@@ -1,10 +1,5 @@
 <script lang="ts">
-    import type {
-        ConversionConfig,
-        OutputEstimate,
-        SourceMetadata,
-    } from "$lib/types";
-    import { estimateOutput } from "$lib/services/media";
+    import type { ConversionConfig } from "$lib/types";
 
     const CONTAINERS = ["mp4", "mkv", "webm", "mov", "mp3"] as const;
 
@@ -12,64 +7,15 @@
         config,
         disabled = false,
         outputName = "",
-        metadata,
         onUpdate,
         onUpdateOutputName,
     }: {
         config: ConversionConfig;
         disabled?: boolean;
         outputName?: string;
-        metadata?: SourceMetadata;
         onUpdate: (config: Partial<ConversionConfig>) => void;
         onUpdateOutputName?: (value: string) => void;
     } = $props();
-
-    let estimate = $state<OutputEstimate | null>(null);
-    let estimating = $state(false);
-    let estimateError = $state<string | null>(null);
-
-    $effect(() => {
-        estimating = true;
-        estimateError = null;
-        const currentConfig = JSON.parse(JSON.stringify(config));
-        const currentMetadata = metadata
-            ? JSON.parse(JSON.stringify(metadata))
-            : undefined;
-        let cancelled = false;
-
-        estimateOutput(currentConfig, currentMetadata)
-            .then((result) => {
-                if (!cancelled) {
-                    estimate = result;
-                }
-            })
-            .catch((error) => {
-                if (!cancelled) {
-                    estimate = null;
-                    estimateError =
-                        error instanceof Error
-                            ? error.message
-                            : "Unable to estimate";
-                }
-            })
-            .finally(() => {
-                if (!cancelled) {
-                    estimating = false;
-                }
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    });
-
-    function formatSize(sizeMb?: number) {
-        if (!sizeMb) return "—";
-        if (sizeMb >= 1024) {
-            return `${(sizeMb / 1024).toFixed(1)} GB`;
-        }
-        return `${sizeMb.toFixed(1)} MB`;
-    }
 </script>
 
 <div class="space-y-4">
@@ -113,42 +59,5 @@
                 </button>
             {/each}
         </div>
-    </div>
-
-    <div class="space-y-3">
-        <span
-            class="text-[10px] text-gray-alpha-600 uppercase tracking-widest block border-b border-gray-alpha-100 pb-1"
-        >
-            Estimated Output
-        </span>
-        <div
-            class="grid grid-cols-2 gap-2 text-[11px] font-mono uppercase tracking-wide"
-        >
-            <div class="text-gray-alpha-600">Size</div>
-            <div class="text-foreground">
-                {#if estimating}…{:else}{formatSize(estimate?.sizeMb)}{/if}
-            </div>
-            <div class="text-gray-alpha-600">Video</div>
-            <div class="text-foreground">
-                {estimate ? `${estimate.videoKbps} kb/s` : "—"}
-            </div>
-            <div class="text-gray-alpha-600">Audio</div>
-            <div class="text-foreground">
-                {estimate
-                    ? estimate.audioKbps > 0
-                        ? `${estimate.audioKbps} kb/s`
-                        : "—"
-                    : "—"}
-            </div>
-            <div class="text-gray-alpha-600">Total</div>
-            <div class="text-foreground">
-                {estimate ? `${estimate.totalKbps} kb/s` : "—"}
-            </div>
-        </div>
-        {#if estimateError}
-            <div class="text-[10px] text-ds-red-700 normal-case">
-                {estimateError}
-            </div>
-        {/if}
     </div>
 </div>
