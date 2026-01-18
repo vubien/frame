@@ -3,7 +3,7 @@
     import { open } from "@tauri-apps/plugin-dialog";
     import { stat } from "@tauri-apps/plugin-fs";
 
-    import Header from "$lib/components/Header.svelte";
+    import Titlebar from "$lib/components/Titlebar.svelte";
     import FileList from "$lib/components/FileList.svelte";
     import SettingsPanel from "$lib/components/SettingsPanel.svelte";
     import EmptySelection from "$lib/components/EmptySelection.svelte";
@@ -157,18 +157,17 @@
 </script>
 
 <div
-    class="flex flex-col absolute inset-0 bg-black text-foreground font-sans overflow-hidden selection:bg-ds-blue-900 selection:text-white"
+    class="flex flex-col absolute inset-0 text-foreground font-sans overflow-hidden selection:bg-ds-blue-900 selection:text-white"
 >
+    <Titlebar
+        {totalSize}
+        fileCount={files.length}
+        {isProcessing}
+        onAddFile={handleAddFile}
+        onStartConversion={startConversion}
+    />
     <div class="flex-1 p-4 overflow-hidden">
-        <div class="grid grid-cols-12 grid-rows-[auto_1fr] gap-4 h-full">
-            <Header
-                {totalSize}
-                fileCount={files.length}
-                {isProcessing}
-                onAddFile={handleAddFile}
-                onStartConversion={startConversion}
-            />
-
+        <div class="grid grid-cols-12 gap-4 h-full">
             <FileList
                 {files}
                 {selectedFileId}

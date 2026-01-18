@@ -121,9 +121,18 @@
 }
 
 body {
-    background: var(--background);
+    background: transparent;
     color: var(--foreground);
     font-family: var(--font-mono), ui-monospace, monospace;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+}
+
+html {
+    background: transparent;
+    border-radius: 12px;
 }
 
 .bg-gray-alpha-100 {
