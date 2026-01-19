@@ -2,6 +2,7 @@
 	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import { Plus, Play, FileVideo, HardDrive, LayoutList, Terminal } from 'lucide-svelte';
 	import { cn } from '$lib/utils/cn';
+	import frameIcon from '$lib/assets/icons/frame.svg?raw';
 
 	const appWindow = getCurrentWindow();
 
@@ -105,6 +106,14 @@
 				</svg>
 			</button>
 		</div>
+
+		<span
+			class="flex items-center justify-center px-2 [&>svg]:size-5 [&>svg]:opacity-60 [&>svg]:fill-current text-foreground"
+			aria-hidden="true"
+		>
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			{@html frameIcon}
+		</span>
 
 		<div class="h-6 w-px bg-gray-alpha-100"></div>
 
