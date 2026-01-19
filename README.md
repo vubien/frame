@@ -14,6 +14,12 @@
 
 **Frame** is a high-performance media conversion utility built on the Tauri v2 framework. It provides a native, macOS-only interface for FFmpeg operations, allowing for granular control over video and audio transcoding parameters. The application leverages a Rust-based backend for concurrent task management and process execution, coupled with a Svelte 5 frontend for configuration and state monitoring.
 
+<br />
+<div align="center">
+  <img src="./preview.png" alt="Frame Application Preview" width="800" />
+</div>
+<br />
+
 ## Features
 
 ### Media Conversion Core
