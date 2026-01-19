@@ -1,10 +1,13 @@
-# frame
+<div align="center">
+  <img src="./icon.png" width="128" height="128" alt="Frame Icon" />
+  <h1>Frame</h1>
+</div>
 
-<div align="left">
+<div align="center">
 	<img src="https://img.shields.io/badge/Tauri-v2-orange?style=flat-square&logo=tauri" alt="Tauri" />
 	<img src="https://img.shields.io/badge/Svelte-v5-red?style=flat-square&logo=svelte" alt="Svelte" />
 	<img src="https://img.shields.io/badge/Rust-Edition_2024-black?style=flat-square&logo=rust" alt="Rust" />
-	<img src="https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript" alt="TypeScript" />
+	<img src="https://img.shields.io/badge/TypeScript-5.9.3-blue?style=flat-square&logo=typescript" alt="TypeScript" />
 	<img src="https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?style=flat-square&logo=tailwindcss" alt="Tailwind" />
 	<img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" />
 </div>
@@ -47,7 +50,7 @@
 *   **Build System:** Vite.
 *   **Styling:** Tailwind CSS v4, `clsx`, `tailwind-merge`.
 *   **State Management:** Svelte 5 `$state` / `$props`.
-*   **Typography:** GeistMono (embedded).
+*   **Typography:** Geist Mono (embedded).
 
 ## Installation
 

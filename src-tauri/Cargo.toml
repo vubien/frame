@@ -1,5 +1,5 @@
 [package]
-name = "frame"
+name = "Frame"
 version = "0.1.0"
 description = "FFMPEG Converter"
 edition = "2024"
