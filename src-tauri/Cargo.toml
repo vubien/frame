@@ -25,6 +25,7 @@ tauri-plugin-dialog = "2.6.0"
 tauri-plugin-fs = "2.4.5"
 tauri-plugin-store = "2.3.0"
 window-vibrancy = "0.7.1"
+tokio = "1.49.0"
 
 [profile.release]
 opt-level = "z"

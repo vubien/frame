@@ -50,7 +50,35 @@ export function parseDurationToSeconds(duration?: string): number | null {
   return null;
 }
 
-// ...
+function parseResolutionHeight(resolution?: string): number | null {
+  if (!resolution) return null;
+  const match = resolution.match(/(\d{2,5})x(\d{2,5})/i);
+  if (!match) return null;
+  const [, , height] = match;
+  return parseInt(height, 10);
+}
+
+function inferTargetHeight(config: ConversionConfig, metadata?: SourceMetadata): number {
+  if (config.resolution === "custom") {
+      const h = parseInt(config.customHeight || "0", 10);
+      return h > 0 ? h : 720;
+  }
+  if (config.resolution !== "original") {
+    return RESOLUTION_HEIGHTS[config.resolution] ?? 720;
+  }
+  const metaHeight = parseResolutionHeight(metadata?.resolution);
+  return metaHeight ?? 720;
+}
+
+function baseVideoBitrate(height: number): number {
+  const tier = BASE_BITRATES.find((t) => height >= t.height);
+  return tier ? tier.kbps : BASE_BITRATES[BASE_BITRATES.length - 1].kbps;
+}
+
+function codecScaleFactor(codec: string): number {
+  const key = codec.toLowerCase();
+  return CODEC_SCALE[key] ?? 1;
+}
 
 function parseSourceBitrate(metadata?: SourceMetadata): number | null {
   const raw = metadata?.bitrate;
@@ -129,7 +157,7 @@ export function estimateOutput(
     videoKbps: Math.round(videoKbps),
     audioKbps: Math.round(audioKbps),
     totalKbps: Math.round(totalKbps),
-    sizeMb: sizeMb ? Math.max(sizeMb, 1) : undefined,
+    sizeMb: sizeMb || undefined,
   };
 }
 

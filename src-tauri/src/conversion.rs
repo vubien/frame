@@ -1,9 +1,113 @@
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Emitter, command};
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandEvent;
+use tokio::sync::mpsc;
+
+const MAX_CONCURRENCY: usize = 2;
+
+#[derive(Debug, Clone)]
+struct ConversionTask {
+    id: String,
+    file_path: String,
+    output_name: Option<String>,
+    config: ConversionConfig,
+}
+
+enum ManagerMessage {
+    Enqueue(ConversionTask),
+    TaskCompleted(String),
+    TaskError(String, String),
+}
+
+pub struct ConversionManager {
+    sender: mpsc::Sender<ManagerMessage>,
+}
+
+impl ConversionManager {
+    pub fn new(app: AppHandle) -> Self {
+        let (tx, mut rx) = mpsc::channel(32);
+        let tx_clone = tx.clone();
+
+        tauri::async_runtime::spawn(async move {
+            let mut queue: VecDeque<ConversionTask> = VecDeque::new();
+            let mut active_tasks: HashMap<String, ()> = HashMap::new(); // We might store handles later if needed
+
+            while let Some(msg) = rx.recv().await {
+                match msg {
+                    ManagerMessage::Enqueue(task) => {
+                        queue.push_back(task);
+                        ConversionManager::process_queue(
+                            &app,
+                            &tx_clone,
+                            &mut queue,
+                            &mut active_tasks,
+                        )
+                        .await;
+                    }
+                    ManagerMessage::TaskCompleted(id) => {
+                        active_tasks.remove(&id);
+                        ConversionManager::process_queue(
+                            &app,
+                            &tx_clone,
+                            &mut queue,
+                            &mut active_tasks,
+                        )
+                        .await;
+                    }
+                    ManagerMessage::TaskError(id, err) => {
+                        eprintln!("Task {} failed: {}", id, err);
+                        active_tasks.remove(&id);
+                        ConversionManager::process_queue(
+                            &app,
+                            &tx_clone,
+                            &mut queue,
+                            &mut active_tasks,
+                        )
+                        .await;
+                    }
+                }
+            }
+        });
+
+        Self { sender: tx }
+    }
+
+    async fn process_queue(
+        app: &AppHandle,
+        tx: &mpsc::Sender<ManagerMessage>,
+        queue: &mut VecDeque<ConversionTask>,
+        active_tasks: &mut HashMap<String, ()>,
+    ) {
+        while active_tasks.len() < MAX_CONCURRENCY {
+            if let Some(task) = queue.pop_front() {
+                active_tasks.insert(task.id.clone(), ());
+
+                // Spawn the actual worker
+                let app_clone = app.clone();
+                let tx_worker = tx.clone();
+                let task_clone = task.clone();
+
+                tauri::async_runtime::spawn(async move {
+                    if let Err(e) = run_ffmpeg_worker(app_clone, task_clone.clone()).await {
+                        let _ = tx_worker
+                            .send(ManagerMessage::TaskError(task_clone.id, e))
+                            .await;
+                    } else {
+                        let _ = tx_worker
+                            .send(ManagerMessage::TaskCompleted(task_clone.id))
+                            .await;
+                    }
+                });
+            } else {
+                break;
+            }
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -238,16 +342,9 @@ fn build_output_path(file_path: &str, container: &str, output_name: Option<Strin
     }
 }
 
-#[command]
-pub async fn start_conversion(
-    app: AppHandle,
-    id: String,
-    file_path: String,
-    output_name: Option<String>,
-    config: ConversionConfig,
-) -> Result<(), String> {
-    let output_path = build_output_path(&file_path, &config.container, output_name);
-    let args = build_ffmpeg_args(&file_path, &output_path, &config);
+async fn run_ffmpeg_worker(app: AppHandle, task: ConversionTask) -> Result<(), String> {
+    let output_path = build_output_path(&task.file_path, &task.config.container, task.output_name);
+    let args = build_ffmpeg_args(&task.file_path, &output_path, &task.config);
 
     let sidecar_command = app
         .shell()
@@ -257,69 +354,94 @@ pub async fn start_conversion(
 
     let (mut rx, _) = sidecar_command.spawn().map_err(|e| e.to_string())?;
 
-    let id_clone = id.clone();
+    let id = task.id;
     let app_clone = app.clone();
 
-    tauri::async_runtime::spawn(async move {
-        let duration_regex = Regex::new(r"Duration: (\d{2}:\d{2}:\d{2}\.\d{2})").unwrap();
-        let time_regex = Regex::new(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})").unwrap();
+    let duration_regex = Regex::new(r"Duration: (\d{2}:\d{2}:\d{2}\.\d{2})").unwrap();
+    let time_regex = Regex::new(r"time=(\d{2}:\d{2}:\d{2}\.\d{2})").unwrap();
 
-        let mut total_duration: Option<f64> = None;
+    let mut total_duration: Option<f64> = None;
+    let mut exit_code: Option<i32> = None;
 
-        while let Some(event) = rx.recv().await {
-            match event {
-                CommandEvent::Stderr(line_bytes) => {
-                    let line = String::from_utf8_lossy(&line_bytes);
+    while let Some(event) = rx.recv().await {
+        match event {
+            CommandEvent::Stderr(line_bytes) => {
+                let line = String::from_utf8_lossy(&line_bytes);
 
-                    if total_duration.is_none() {
-                        if let Some(caps) = duration_regex.captures(&line) {
-                            if let Some(match_str) = caps.get(1) {
-                                total_duration = parse_time(match_str.as_str());
-                            }
+                if total_duration.is_none() {
+                    if let Some(caps) = duration_regex.captures(&line) {
+                        if let Some(match_str) = caps.get(1) {
+                            total_duration = parse_time(match_str.as_str());
                         }
                     }
+                }
 
-                    if let Some(duration) = total_duration {
-                        if let Some(caps) = time_regex.captures(&line) {
-                            if let Some(match_str) = caps.get(1) {
-                                if let Some(current_time) = parse_time(match_str.as_str()) {
-                                    let progress = (current_time / duration * 100.0).min(100.0);
-                                    let _ = app_clone.emit(
-                                        "conversion-progress",
-                                        ProgressPayload {
-                                            id: id_clone.clone(),
-                                            progress,
-                                        },
-                                    );
-                                }
+                if let Some(duration) = total_duration {
+                    if let Some(caps) = time_regex.captures(&line) {
+                        if let Some(match_str) = caps.get(1) {
+                            if let Some(current_time) = parse_time(match_str.as_str()) {
+                                let progress = (current_time / duration * 100.0).min(100.0);
+                                let _ = app_clone.emit(
+                                    "conversion-progress",
+                                    ProgressPayload {
+                                        id: id.clone(),
+                                        progress,
+                                    },
+                                );
                             }
                         }
                     }
                 }
-                CommandEvent::Terminated(payload) => {
-                    if payload.code == Some(0) {
-                        let _ = app_clone.emit(
-                            "conversion-completed",
-                            CompletedPayload {
-                                id: id_clone.clone(),
-                                output_path: output_path.clone(),
-                            },
-                        );
-                    } else {
-                        let _ = app_clone.emit(
-                            "conversion-error",
-                            ErrorPayload {
-                                id: id_clone.clone(),
-                                error: format!("Process terminated with code {:?}", payload.code),
-                            },
-                        );
-                    }
-                }
-                _ => {}
             }
+            CommandEvent::Terminated(payload) => {
+                exit_code = payload.code;
+            }
+            _ => {}
         }
-    });
+    }
 
+    if exit_code == Some(0) {
+        let _ = app_clone.emit(
+            "conversion-completed",
+            CompletedPayload {
+                id: id.clone(),
+                output_path: output_path.clone(),
+            },
+        );
+        Ok(())
+    } else {
+        let err_msg = format!("Process terminated with code {:?}", exit_code);
+        let _ = app_clone.emit(
+            "conversion-error",
+            ErrorPayload {
+                id: id.clone(),
+                error: err_msg.clone(),
+            },
+        );
+        Err(err_msg)
+    }
+}
+
+#[command]
+pub async fn queue_conversion(
+    manager: tauri::State<'_, ConversionManager>,
+    id: String,
+    file_path: String,
+    output_name: Option<String>,
+    config: ConversionConfig,
+) -> Result<(), String> {
+    let task = ConversionTask {
+        id,
+        file_path,
+        output_name,
+        config,
+    };
+
+    manager
+        .sender
+        .send(ManagerMessage::Enqueue(task))
+        .await
+        .map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -528,8 +650,7 @@ pub async fn estimate_output(
     let total_kbps = video_kbps + audio_kbps;
 
     let size_mb = parse_duration_to_seconds(metadata_ref.and_then(|m| m.duration.as_ref()))
-        .map(|seconds| (total_kbps * seconds) / 8.0 / 1024.0)
-        .filter(|size| *size > 0.5);
+        .map(|seconds| (total_kbps * seconds) / 8.0 / 1024.0);
 
     Ok(OutputEstimate {
         video_kbps: video_kbps.round() as u32,

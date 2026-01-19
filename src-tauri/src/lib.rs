@@ -13,6 +13,8 @@ pub fn run() {
             apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, Some(16.0))
                 .expect("Unsupported platform! 'apply_vibrancy' is only supported on macOS");
 
+            app.manage(conversion::ConversionManager::new(app.handle().clone()));
+
             Ok(())
         })
         .plugin(tauri_plugin_shell::init())
@@ -21,7 +23,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(StoreBuilder::new().build())
         .invoke_handler(tauri::generate_handler![
-            conversion::start_conversion,
+            conversion::queue_conversion,
             conversion::probe_media,
             conversion::estimate_output
         ])

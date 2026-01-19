@@ -118,7 +118,7 @@
                         class="text-[11px] py-1.5 px-2 border rounded transition-all text-center uppercase
                         {config.scalingAlgorithm === algo.id
                             ? 'bg-ds-blue-900/20 text-ds-blue-600 border-ds-blue-600'
-                            : 'bg-transparent text-gray-alpha-600 border-gray-alpha-200 disabled:pointer-events-none hover:bg-gray-alpha-100 hover:text-foreground disabled:opacity-50 disabled:hover:bg-transparent'}"
+                            : 'bg-transparent text-gray-alpha-600 border-gray-alpha-200 disabled:cursor-not-allowed hover:bg-gray-alpha-100 hover:text-foreground disabled:opacity-50'}"
                     >
                         {algo.label}
                     </button>
@@ -245,7 +245,7 @@
             <div class="flex justify-between items-end">
                 <label
                     for="video-bitrate"
-                    class="text-[10px] text-gray-alpha-600 uppercase tracking-widest"
+                    class="text-[10px] text-gray-alpha-600 uppercase tracking-widest whitespace-nowrap"
                     >Target Bitrate (kbps)</label
                 >
             </div>

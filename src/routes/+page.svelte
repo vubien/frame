@@ -104,11 +104,16 @@
     $effect(() => {
         const unlistenPromise = setupConversionListeners(
             (payload) => {
-                files = files.map((f) =>
-                    f.id === payload.id
-                        ? { ...f, progress: payload.progress }
-                        : f,
-                );
+                files = files.map((f) => {
+                    if (f.id === payload.id) {
+                        const status =
+                            f.status === FileStatus.QUEUED
+                                ? FileStatus.CONVERTING
+                                : f.status;
+                        return { ...f, status, progress: payload.progress };
+                    }
+                    return f;
+                });
             },
             (payload) => {
                 files = files.map((f) =>
@@ -203,11 +208,20 @@
 
     function updateSelectedConfig(newConfig: Partial<ConversionConfig>) {
         if (selectedFileId) {
-            files = files.map((f) =>
-                f.id === selectedFileId
-                    ? { ...f, config: { ...f.config, ...newConfig } }
-                    : f,
-            );
+            files = files.map((f) => {
+                if (f.id !== selectedFileId) return f;
+
+                const nextConfig = { ...f.config, ...newConfig };
+
+                if (
+                    newConfig.container === "mp3" &&
+                    nextConfig.audioCodec !== "mp3"
+                ) {
+                    nextConfig.audioCodec = "mp3";
+                }
+
+                return { ...f, config: nextConfig };
+            });
         }
     }
 
@@ -262,7 +276,7 @@
 
         files = files.map((f) =>
             f.status === FileStatus.IDLE
-                ? { ...f, status: FileStatus.CONVERTING, progress: 0 }
+                ? { ...f, status: FileStatus.QUEUED, progress: 0 }
                 : f,
         );
 

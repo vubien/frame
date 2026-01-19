@@ -24,14 +24,14 @@ export async function startConversion(
     outputName?: string,
 ) {
     try {
-        await invoke("start_conversion", {
+        await invoke("queue_conversion", {
             id,
             filePath,
             outputName,
             config,
         });
     } catch (error) {
-        console.error("Failed to start conversion:", error);
+        console.error("Failed to queue conversion:", error);
         throw error;
     }
 }

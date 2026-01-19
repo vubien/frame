@@ -63,7 +63,7 @@
                 {/each}
             </div>
 
-            <div class="flex items-center gap-2 pt-1">
+            <div class="space-y-2 pt-1">
                 <label
                     for="audio-bitrate"
                     class="text-[10px] text-gray-alpha-600 uppercase tracking-widest whitespace-nowrap"
@@ -81,7 +81,7 @@
             </div>
         </div>
     </div>
-    <div class="space-y-3 pt-1">
+    <div class="space-y-3">
         <span
             class="text-[10px] text-gray-alpha-600 uppercase tracking-widest block border-b border-gray-alpha-100 pb-1"
         >
@@ -89,16 +89,23 @@
         </span>
         <div class="grid grid-cols-1">
             {#each AUDIO_CODECS as codec}
+                {@const isMp3Container = config.container === "mp3"}
+                {@const isAllowed = !isMp3Container || codec.id === "mp3"}
                 <button
                     onclick={() => onUpdate({ audioCodec: codec.id })}
-                    {disabled}
+                    disabled={disabled || !isAllowed}
                     class="text-[11px] py-1.5 px-3 border-l-2 text-left transition-all uppercase flex justify-between
                     {config.audioCodec === codec.id
                         ? 'border-l-ds-blue-600 bg-gray-alpha-100 text-foreground pl-3'
-                        : 'border-l-transparent text-gray-alpha-600 hover:text-foreground pl-2'}"
+                        : 'border-l-transparent text-gray-alpha-600 hover:text-foreground pl-2'}
+                    {!isAllowed ? 'opacity-50 cursor-not-allowed' : ''}"
                 >
                     <span>{codec.id}</span>
-                    <span class="opacity-50 text-[9px]">{codec.label}</span>
+                    <span class="opacity-50 text-[9px]">
+                        {isMp3Container && codec.id !== "mp3"
+                            ? "Incompatible with MP3"
+                            : codec.label}
+                    </span>
                 </button>
             {/each}
         </div>

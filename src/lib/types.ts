@@ -1,5 +1,6 @@
 export enum FileStatus {
   IDLE = "IDLE",
+  QUEUED = "QUEUED",
   CONVERTING = "CONVERTING",
   COMPLETED = "COMPLETED",
   ERROR = "ERROR",
