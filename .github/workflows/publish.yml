@@ -35,8 +35,15 @@ jobs:
       - name: Install Frontend Dependencies
         run: bun install
 
+      - name: Cache FFmpeg Binaries
+        id: cache-ffmpeg
+        uses: actions/cache@v4
+        with:
+          path: src-tauri/binaries
+          key: ffmpeg-binaries-${{ matrix.platform }}-v1
+
       - name: Setup FFmpeg (macOS)
-        if: matrix.platform == 'macos-14'
+        if: matrix.platform == 'macos-14' && steps.cache-ffmpeg.outputs.cache-hit != 'true'
         run: |
           mkdir -p src-tauri/binaries
           brew install ffmpeg
@@ -46,7 +53,7 @@ jobs:
           cp $FFPROBE_PATH src-tauri/binaries/ffprobe-aarch64-apple-darwin
 
       - name: Setup FFmpeg (Windows)
-        if: matrix.platform == 'windows-latest'
+        if: matrix.platform == 'windows-latest' && steps.cache-ffmpeg.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           New-Item -Path "src-tauri/binaries" -ItemType Directory -Force
