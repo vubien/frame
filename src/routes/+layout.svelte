@@ -8,6 +8,15 @@
 
 	onMount(() => {
 		platform = type();
+
+		const handleKeydown = (e: KeyboardEvent) => {
+			if (e.key === 'Tab') {
+				e.preventDefault();
+			}
+		};
+
+		window.addEventListener('keydown', handleKeydown);
+		return () => window.removeEventListener('keydown', handleKeydown);
 	});
 </script>
 
