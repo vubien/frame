@@ -62,7 +62,7 @@
 </script>
 
 <div class="relative z-50 h-10 w-full shrink-0 select-none" data-tauri-drag-region>
-	<div class="pointer-events-none absolute inset-0 flex items-center px-4">
+	<div class="pointer-events-none absolute inset-0 mt-2 flex items-center px-4">
 		<div class="grid w-full grid-cols-12 gap-4">
 			<div class="col-span-8 mt-2 flex items-center gap-6">
 				<span
@@ -116,12 +116,7 @@
 
 			<div class="col-span-4 mt-2 flex items-center gap-3">
 				{#if onAddFile}
-					<Button
-						onclick={onAddFile}
-						variant="secondary"
-						size="sm"
-						class="pointer-events-auto gap-2"
-					>
+					<Button onclick={onAddFile} variant="secondary" class="pointer-events-auto gap-2">
 						<Plus size={12} />
 						Add Source
 					</Button>
@@ -132,7 +127,6 @@
 						onclick={onStartConversion}
 						disabled={isProcessing || selectedCount === 0}
 						variant="default"
-						size="sm"
 						class={cn('pointer-events-auto gap-2', isProcessing && 'cursor-progress')}
 					>
 						{#if isProcessing}

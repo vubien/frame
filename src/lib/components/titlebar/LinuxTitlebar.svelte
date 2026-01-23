@@ -116,12 +116,7 @@
 
 			<div class="col-span-4 mt-2 flex items-center gap-3">
 				{#if onAddFile}
-					<Button
-						onclick={onAddFile}
-						variant="secondary"
-						size="sm"
-						class="pointer-events-auto gap-2"
-					>
+					<Button onclick={onAddFile} variant="secondary" class="pointer-events-auto gap-2">
 						<Plus size={12} />
 						Add Source
 					</Button>
@@ -132,7 +127,6 @@
 						onclick={onStartConversion}
 						disabled={isProcessing || selectedCount === 0}
 						variant="default"
-						size="sm"
 						class={cn('pointer-events-auto gap-2', isProcessing && 'cursor-progress')}
 					>
 						{#if isProcessing}
