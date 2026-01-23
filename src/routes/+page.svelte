@@ -4,6 +4,7 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { stat } from '@tauri-apps/plugin-fs';
 	import { invoke } from '@tauri-apps/api/core';
+	import { listen } from '@tauri-apps/api/event';
 
 	import Titlebar from '$lib/components/Titlebar.svelte';
 	import LogsView from '$lib/components/LogsView.svelte';
@@ -36,6 +37,7 @@
 	let isProcessing = $state(false);
 	let customPresets = $state<PresetDefinition[]>([]);
 	let maxConcurrencySetting = $state(2);
+	let isDragging = $state(false);
 
 	let activeView = $state<'dashboard' | 'logs'>('dashboard');
 	let logs = $state<Record<string, string[]>>({});
@@ -53,10 +55,39 @@
 			console.error('Failed to load concurrency settings', error);
 		}
 
+		const unlistenDragDrop = await setupDragDrop();
+
 		setTimeout(() => {
 			invoke('close_splash');
 		}, 1000);
+
+		return () => {
+			unlistenDragDrop();
+		};
 	});
+
+	async function setupDragDrop() {
+		const unlistenEnter = await listen('tauri://drag-enter', () => {
+			isDragging = true;
+		});
+
+		const unlistenLeave = await listen('tauri://drag-leave', () => {
+			isDragging = false;
+		});
+
+		const unlistenDrop = await listen<{ paths: string[] }>('tauri://drag-drop', (event) => {
+			isDragging = false;
+			if (event.payload.paths && event.payload.paths.length > 0) {
+				addFilesFromPaths(event.payload.paths);
+			}
+		});
+
+		return () => {
+			unlistenEnter();
+			unlistenLeave();
+			unlistenDrop();
+		};
+	}
 
 	function createInitialConfig(): ConversionConfig {
 		return getDefaultConfig();
@@ -168,6 +199,50 @@
 		}
 	}
 
+	async function addFilesFromPaths(paths: string[]) {
+		const newFiles: FileItem[] = [];
+
+		for (const pathStr of paths) {
+			const name = pathStr.split(/[/\\]/).pop() || 'unknown';
+			// Basic filtering for known extensions could be done here if desired,
+			// but we can also just accept all and let probe fail or let user decide.
+			// For better UX, let's filter only likely media files or accept all.
+			// Given the file picker filters, maybe we should be lenient here or check ext.
+
+			let size = 0;
+			try {
+				const metadata = await stat(pathStr);
+				size = metadata.size;
+			} catch (e) {
+				console.error('Failed to stat file:', pathStr, e);
+			}
+
+			newFiles.push({
+				id: uuidv4(),
+				name: name,
+				size: size,
+				status: FileStatus.IDLE,
+				progress: 0,
+				originalFormat: name.split('.').pop() || 'unknown',
+				config: createInitialConfig(),
+				outputName: deriveOutputName(name),
+				metadataStatus: 'idle',
+				path: pathStr,
+				isSelectedForConversion: true
+			});
+		}
+
+		if (newFiles.length > 0) {
+			files = [...files, ...newFiles];
+			for (const file of newFiles) {
+				loadSourceMetadata(file.id, file.path);
+			}
+			if (!selectedFileId) {
+				selectedFileId = newFiles[0].id;
+			}
+		}
+	}
+
 	async function handleAddFile() {
 		const selected = await open({
 			multiple: true,
@@ -181,41 +256,7 @@
 
 		if (selected) {
 			const paths = Array.isArray(selected) ? selected : [selected];
-
-			const newFiles: FileItem[] = [];
-
-			for (const pathStr of paths) {
-				const name = pathStr.split(/[/\\]/).pop() || 'unknown';
-				let size = 0;
-				try {
-					const metadata = await stat(pathStr);
-					size = metadata.size;
-				} catch (e) {
-					console.error('Failed to stat file:', pathStr, e);
-				}
-
-				newFiles.push({
-					id: uuidv4(),
-					name: name,
-					size: size,
-					status: FileStatus.IDLE,
-					progress: 0,
-					originalFormat: name.split('.').pop() || 'unknown',
-					config: createInitialConfig(),
-					outputName: deriveOutputName(name),
-					metadataStatus: 'idle',
-					path: pathStr,
-					isSelectedForConversion: true
-				});
-			}
-
-			files = [...files, ...newFiles];
-			for (const file of newFiles) {
-				loadSourceMetadata(file.id, file.path);
-			}
-			if (!selectedFileId && newFiles.length > 0) {
-				selectedFileId = newFiles[0].id;
-			}
+			await addFilesFromPaths(paths);
 		}
 	}
 
@@ -349,9 +390,7 @@
 					onToggleAllBatch={handleToggleAllBatch}
 				/>
 
-				<div
-					class="col-span-12 h-full min-h-0 lg:col-span-4"
-				>
+				<div class="col-span-12 h-full min-h-0 lg:col-span-4">
 					<div
 						class="custom-scrollbar h-full min-h-0 overflow-y-auto rounded-lg border border-gray-alpha-100 bg-gray-alpha-100"
 					>
@@ -384,4 +423,18 @@
 			<LogsView {logs} {files} />
 		{/if}
 	</div>
+
+	{#if isDragging}
+		<div
+			class="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm"
+		>
+			<div
+				class="flex flex-col items-center justify-center rounded-lg border border-dashed border-ds-blue-600 bg-ds-blue-900/20 px-6 py-3 shadow-2xl backdrop-blur-sm"
+			>
+				<p class="font-mono text-[10px] font-medium tracking-widest text-ds-blue-500 uppercase">
+					Import Source Files
+				</p>
+			</div>
+		</div>
+	{/if}
 </div>

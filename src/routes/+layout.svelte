@@ -12,7 +12,7 @@
 </script>
 
 <div
-	class="**:focus:ring-none flex h-screen flex-col overflow-hidden border-none bg-black/60 select-none **:focus:outline-none"
+	class="**:focus:ring-none flex h-screen flex-col overflow-hidden border-none bg-background/60 select-none **:focus:outline-none"
 	class:rounded-2xl={platform === 'macos'}
 >
 	<div class="relative flex-1">
