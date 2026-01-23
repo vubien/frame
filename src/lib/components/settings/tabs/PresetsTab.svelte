@@ -3,6 +3,10 @@
 	import { Trash2 } from 'lucide-svelte';
 	import { cn } from '$lib/utils/cn';
 	import type { ConversionConfig, PresetDefinition } from '$lib/types';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import ListItem from '$lib/components/ui/ListItem.svelte';
+	import Label from '$lib/components/ui/Label.svelte';
 
 	let {
 		config,
@@ -82,12 +86,12 @@
 </script>
 
 <div class="space-y-3">
-	<div class="flex items-center justify-between border-b border-gray-alpha-100 pb-1">
-		<span class="text-gray-alpha-600 text-[10px] tracking-wide uppercase">Preset Library</span>
+	<div class="relative w-full">
+		<Label variant="section">Preset Library</Label>
 		{#if notice}
 			<span
 				class={cn(
-					'text-[9px]  tracking-wide uppercase',
+					'absolute top-0 right-0 text-[9px] tracking-wide uppercase',
 					notice.tone === 'error' ? 'text-ds-red-700' : 'text-ds-blue-600'
 				)}
 			>
@@ -97,38 +101,24 @@
 	</div>
 
 	<div class="flex gap-2">
-		<input
-			type="text"
-			bind:value={newPresetName}
-			placeholder="Preset Label"
-			class="border-gray-alpha-200 h-7.5 flex-1 rounded border bg-transparent px-3 py-1.5 text-[11px] tracking-wide transition-all placeholder:uppercase focus:border-ds-blue-600! focus:outline-none"
-			{disabled}
-		/>
-		<button
-			onclick={savePreset}
-			disabled={disabled || !newPresetName.trim()}
-			class={cn(
-				'h-7.5 rounded border px-3 py-1.5 text-[10px] tracking-wide uppercase transition-all',
-				disabled || !newPresetName.trim()
-					? 'border-gray-alpha-200 text-gray-alpha-600 cursor-not-allowed opacity-50'
-					: 'border-ds-blue-600 text-ds-blue-600 hover:bg-ds-blue-900/20'
-			)}
-		>
+		<div class="flex-1">
+			<Input
+				type="text"
+				value={newPresetName}
+				oninput={(e) => (newPresetName = e.currentTarget.value)}
+				placeholder="Preset Label"
+				{disabled}
+			/>
+		</div>
+		<Button onclick={savePreset} disabled={disabled || !newPresetName.trim()} variant="outline">
 			Save
-		</button>
+		</Button>
 	</div>
 
 	<div class="space-y-1.5">
 		{#each presets as preset (preset.id)}
-			<div
-				class={cn(
-					'flex h-7.5 w-full cursor-pointer items-center gap-2 rounded border px-2 py-1.5 text-left transition-all',
-					configsMatch(config, preset.config)
-						? 'border-ds-blue-600 bg-ds-blue-900/20 text-ds-blue-600'
-						: 'border-gray-alpha-200 text-gray-alpha-600 hover:bg-gray-alpha-100 hover:text-foreground!'
-				)}
-				role="button"
-				tabindex="0"
+			<ListItem
+				selected={configsMatch(config, preset.config)}
 				onclick={() => applyPreset(preset)}
 				onkeydown={(event) => {
 					if (event.key === 'Enter' || event.key === ' ') {
@@ -136,30 +126,30 @@
 						applyPreset(preset);
 					}
 				}}
+				class="pr-1"
 			>
-				<span
-					class="pointer-events-none flex flex-1 items-center justify-between gap-2 text-[11px] font-medium tracking-wide uppercase"
-				>
-					<span class="truncate">{preset.name}</span>
-					<span class="text-[9px]">
-						{configsMatch(config, preset.config) ? 'APPLIED' : 'APPLY'}
+				<span class="truncate">{preset.name}</span>
+				<div class="flex items-center gap-2">
+					<span class="pr-2 text-[9px] font-medium opacity-50">
+						{configsMatch(config, preset.config) ? 'APPLIED' : ''}
 					</span>
-				</span>
-				{#if !preset.builtIn}
-					<button
-						type="button"
-						class="text-gray-alpha-600 flex size-4 items-center justify-center rounded transition-colors hover:text-ds-red-600"
-						title="Delete preset"
-						onclick={(event) => {
-							event.stopPropagation();
-							removePreset(preset);
-						}}
-						{disabled}
-					>
-						<Trash2 size={12} />
-					</button>
-				{/if}
-			</div>
+					{#if !preset.builtIn}
+						<Button
+							variant="destructive"
+							size="none"
+							class="size-5 shrink-0 opacity-50 hover:opacity-100"
+							title="Delete preset"
+							onclick={(event) => {
+								event.stopPropagation();
+								removePreset(preset);
+							}}
+							{disabled}
+						>
+							<Trash2 size={12} />
+						</Button>
+					{/if}
+				</div>
+			</ListItem>
 		{/each}
 	</div>
 </div>

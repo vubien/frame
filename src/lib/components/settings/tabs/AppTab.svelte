@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { cn } from '$lib/utils/cn';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	let {
 		maxConcurrency,
@@ -59,18 +59,14 @@
 					disabled={disabled || isSaving}
 				/>
 			</div>
-			<button
+			<Button
 				onclick={handleSave}
 				disabled={disabled || isSaving || localValue.current === String(maxConcurrency)}
-				class={cn(
-					'h-7.5 rounded border px-3 py-1.5 text-[10px] tracking-wide uppercase transition-all',
-					disabled || isSaving || localValue.current === String(maxConcurrency)
-						? 'border-gray-alpha-200 text-gray-alpha-600 cursor-not-allowed opacity-50'
-						: 'border-ds-blue-600 text-ds-blue-600 hover:bg-ds-blue-900/20'
-				)}
+				variant="outline"
+				class="h-7.5"
 			>
 				{isSaving ? 'Saving...' : 'Apply'}
-			</button>
+			</Button>
 		</div>
 	</div>
 </div>
