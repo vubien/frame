@@ -188,7 +188,13 @@ pub struct ConversionConfig {
     pub scaling_algorithm: String,
     pub fps: String,
     pub crf: u8,
+    #[serde(default = "default_quality")]
+    pub quality: u32,
     pub preset: String,
+}
+
+fn default_quality() -> u32 {
+    50
 }
 
 #[derive(Clone, Serialize)]
@@ -262,6 +268,18 @@ pub fn build_ffmpeg_args(input: &str, output: &str, config: &ConversionConfig) -
         if config.video_bitrate_mode == "bitrate" {
             args.push("-b:v".to_string());
             args.push(format!("{}k", config.video_bitrate));
+        } else if config.video_codec == "h264_nvenc" {
+            // NVENC uses -rc:v vbr and -cq:v (1-51), where 1 is best.
+            // Map Quality (1-100, 100 best) to CQ (51-1).
+            let cq = (52.0 - (config.quality as f64 / 2.0)).round().clamp(1.0, 51.0) as u32;
+            args.push("-rc:v".to_string());
+            args.push("vbr".to_string());
+            args.push("-cq:v".to_string());
+            args.push(cq.to_string());
+        } else if config.video_codec == "h264_videotoolbox" {
+            // VideoToolbox uses -q:v (1-100), where 100 is best.
+            args.push("-q:v".to_string());
+            args.push(config.quality.to_string());
         } else {
             args.push("-crf".to_string());
             args.push(config.crf.to_string());
@@ -693,8 +711,10 @@ mod tests {
             scaling_algorithm: "bicubic".into(),
             fps: "original".into(),
             crf: 23,
+            quality: 50,
             preset: "medium".into(),
         };
+
         let args = build_ffmpeg_args("input.mov", "output.mp4", &config);
 
         assert_eq!(args[0], "-i");
@@ -726,6 +746,7 @@ mod tests {
             scaling_algorithm: "bicubic".into(),
             fps: "original".into(),
             crf: 23,
+            quality: 50,
             preset: "medium".into(),
         };
         let args = build_ffmpeg_args("in.mp4", "out.mp4", &config);
@@ -751,8 +772,10 @@ mod tests {
             scaling_algorithm: "bicubic".into(),
             fps: "original".into(),
             crf: 23,
+            quality: 50,
             preset: "medium".into(),
         };
+
         let args = build_ffmpeg_args("in.mp4", "out.mp4", &config);
 
         let vf_index = args.iter().position(|r| r == "-vf").unwrap();
@@ -776,6 +799,7 @@ mod tests {
             scaling_algorithm: "bicubic".into(),
             fps: "original".into(),
             crf: 18,
+            quality: 50,
             preset: "slow".into(),
         };
         let args = build_ffmpeg_args("raw.mov", "archive.mkv", &config);
@@ -804,6 +828,7 @@ mod tests {
             scaling_algorithm: "bicubic".into(),
             fps: "original".into(),
             crf: 30,
+            quality: 50,
             preset: "medium".into(),
         };
         let args = build_ffmpeg_args("clip.mp4", "web.webm", &config);
@@ -852,6 +877,7 @@ mod tests {
             scaling_algorithm: "bicubic".into(),
             fps: "original".into(),
             crf: 23,
+            quality: 50,
             preset: "medium".into(),
         }
     }
@@ -900,10 +926,27 @@ mod tests {
     fn test_hardware_encoder_videotoolbox() {
         let mut config = sample_config("mov");
         config.video_codec = "h264_videotoolbox".into();
+        config.quality = 55;
 
         let args = build_ffmpeg_args("in.mov", "out.mov", &config);
 
         assert!(contains_args(&args, &["-c:v", "h264_videotoolbox"]));
+        assert!(contains_args(&args, &["-q:v", "55"]));
+        assert!(!args.iter().any(|a| a == "-crf"));
+    }
+
+    #[test]
+    fn test_hardware_encoder_nvenc() {
+        let mut config = sample_config("mp4");
+        config.video_codec = "h264_nvenc".into();
+        config.quality = 50; // Should map to CQ ~27 (52 - 25)
+
+        let args = build_ffmpeg_args("in.mp4", "out.mp4", &config);
+
+        assert!(contains_args(&args, &["-c:v", "h264_nvenc"]));
+        assert!(contains_args(&args, &["-rc:v", "vbr"]));
+        assert!(contains_args(&args, &["-cq:v", "27"]));
+        assert!(!args.iter().any(|a| a == "-crf"));
     }
 
     #[test]

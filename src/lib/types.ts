@@ -30,6 +30,7 @@ export interface ConversionConfig {
 	scalingAlgorithm: 'bicubic' | 'lanczos' | 'bilinear' | 'nearest';
 	fps: string;
 	crf: number;
+	quality: number;
 	preset: string;
 }
 

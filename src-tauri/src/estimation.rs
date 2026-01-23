@@ -388,7 +388,7 @@ fn container_overhead_factor(container: &str) -> f64 {
     }
 }
 
-fn estimate_crf_video_bitrate(
+fn estimate_quality_video_bitrate(
     config: &ConversionConfig,
     metadata: Option<&ProbeMetadata>,
     target_dimensions: VideoDimensions,
@@ -403,6 +403,13 @@ fn estimate_crf_video_bitrate(
     let source_pixel_rate = source_dimensions.pixel_rate(source_fps).max(1.0);
     let pixel_ratio = target_pixel_rate / source_pixel_rate;
 
+    let is_hardware = config.video_codec.contains("videotoolbox") || config.video_codec.contains("nvenc");
+    let effective_crf = if is_hardware {
+        (100.0 - config.quality as f64) / 1.96
+    } else {
+        config.crf as f64
+    };
+
     if let Some(source_bitrate) = source_video_bitrate_kbps(metadata) {
         let reference = codec_reference(&config.video_codec);
         let source_bits_per_pixel = (source_bitrate * 1000.0) / source_pixel_rate;
@@ -411,7 +418,7 @@ fn estimate_crf_video_bitrate(
             let quality_ratio = source_bits_per_pixel / reference.reference_bits_per_pixel;
             if quality_ratio.is_finite() && quality_ratio > 0.0 {
                 let source_crf = reference.reference_crf - 6.0 * quality_ratio.log2();
-                let quality_factor = 2f64.powf((source_crf - config.crf as f64) / 6.0);
+                let quality_factor = 2f64.powf((source_crf - effective_crf) / 6.0);
                 return (source_bitrate * pixel_ratio * quality_factor).max(0.0);
             }
         }
@@ -419,7 +426,7 @@ fn estimate_crf_video_bitrate(
         return (source_bitrate * pixel_ratio).max(0.0);
     }
 
-    reference_bitrate_from_quality(&config.video_codec, config.crf, target_pixel_rate)
+    reference_bitrate_from_quality(&config.video_codec, effective_crf, target_pixel_rate)
 }
 
 fn source_video_bitrate_kbps(metadata: Option<&ProbeMetadata>) -> Option<f64> {
@@ -465,6 +472,10 @@ fn codec_reference(codec: &str) -> CodecReference {
             reference_crf: 9.0,
             reference_bits_per_pixel: DEFAULT_PRORES_BITS_PER_PIXEL,
         },
+        "h264_videotoolbox" | "h264_nvenc" => CodecReference {
+            reference_crf: 23.0,
+            reference_bits_per_pixel: 0.045,
+        },
         _ => CodecReference {
             reference_crf: 23.0,
             reference_bits_per_pixel: DEFAULT_H264_BITS_PER_PIXEL,
@@ -472,9 +483,9 @@ fn codec_reference(codec: &str) -> CodecReference {
     }
 }
 
-fn reference_bitrate_from_quality(codec: &str, crf: u8, pixel_rate: f64) -> f64 {
+fn reference_bitrate_from_quality(codec: &str, crf: f64, pixel_rate: f64) -> f64 {
     let reference = codec_reference(codec);
-    let quality_factor = 2f64.powf((reference.reference_crf - crf as f64) / 6.0);
+    let quality_factor = 2f64.powf((reference.reference_crf - crf) / 6.0);
     (reference.reference_bits_per_pixel * quality_factor * pixel_rate) / 1000.0
 }
 
@@ -494,7 +505,7 @@ pub async fn estimate_output(
     } else if config.video_bitrate_mode == "bitrate" {
         parse_config_bitrate(&config.video_bitrate, "video bitrate")?
     } else {
-        estimate_crf_video_bitrate(&config, metadata_ref, target_dimensions, target_fps)
+        estimate_quality_video_bitrate(&config, metadata_ref, target_dimensions, target_fps)
     };
 
     let audio_kbps = estimate_audio_bitrate_kbps(&config, metadata_ref, audio_only)?;
@@ -535,6 +546,7 @@ mod tests {
             scaling_algorithm: "bicubic".into(),
             fps: "original".into(),
             crf: 23,
+            quality: 50,
             preset: "medium".into(),
         }
     }

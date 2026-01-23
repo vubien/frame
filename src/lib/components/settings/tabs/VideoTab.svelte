@@ -5,9 +5,10 @@
 	import Input from '$lib/components/ui/Input.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
 	import Slider from '$lib/components/ui/Slider.svelte';
+	import { platform } from '@tauri-apps/plugin-os';
 
 	const RESOLUTIONS = ['original', '1080p', '720p', '480p', 'custom'] as const;
-	const VIDEO_CODECS = [
+	const ALL_VIDEO_CODECS = [
 		{ id: 'libx264', label: 'H.264 / AVC' },
 		{ id: 'libx265', label: 'H.265 / HEVC' },
 		{ id: 'vp9', label: 'VP9 / Web' },
@@ -16,6 +17,14 @@
 		{ id: 'h264_videotoolbox', label: 'H.264 (Apple Silicon)' },
 		{ id: 'h264_nvenc', label: 'H.264 (NVIDIA)' }
 	] as const;
+
+	const currentPlatform = platform();
+
+	const availableCodecs = ALL_VIDEO_CODECS.filter((codec) => {
+		if (codec.id === 'h264_videotoolbox') return currentPlatform === 'macos';
+		if (codec.id === 'h264_nvenc') return currentPlatform === 'windows' || currentPlatform === 'linux';
+		return true;
+	});
 
 	const PRESETS = [
 		{ id: 'ultrafast', label: 'Ultrafast', desc: 'Largest file, fastest conversion' },
@@ -42,6 +51,10 @@
 		{ id: '30', label: '30 fps' },
 		{ id: '60', label: '60 fps' }
 	] as const;
+
+	const isHardwareEncoder = $derived(
+		config.videoCodec === 'h264_videotoolbox' || config.videoCodec === 'h264_nvenc'
+	);
 
 	let {
 		config,
@@ -141,7 +154,7 @@
 	<div class="space-y-3 pt-2">
 		<Label variant="section">Video Encoder</Label>
 		<div class="grid grid-cols-1 gap-1.5">
-			{#each VIDEO_CODECS as codec (codec.id)}
+			{#each availableCodecs as codec (codec.id)}
 				<ListItem
 					selected={config.videoCodec === codec.id}
 					onclick={() => onUpdate({ videoCodec: codec.id })}
@@ -195,26 +208,53 @@
 	{#if config.videoBitrateMode === 'crf'}
 		<div class="space-y-2 pt-2">
 			<div class="flex items-end justify-between">
-				<Label for="quality-factor">Quality Factor</Label>
+				<Label for="quality-factor">
+					{#if isHardwareEncoder}
+						Encoding Quality
+					{:else}
+						Quality Factor
+					{/if}
+				</Label>
 				<div
 					class="rounded border border-ds-blue-600 bg-ds-blue-900/20 px-1.5 text-[10px] font-medium text-ds-blue-600"
 				>
-					CRF {config.crf}
+					{#if isHardwareEncoder}
+						Q {config.quality}
+					{:else}
+						CRF {config.crf}
+					{/if}
 				</div>
 			</div>
 			<div class="py-2">
-				<Slider
-					id="quality-factor"
-					min={0}
-					max={51}
-					value={config.crf}
-					oninput={(e) => onUpdate({ crf: parseInt(e.currentTarget.value) })}
-					{disabled}
-				/>
+				{#if isHardwareEncoder}
+					<Slider
+						id="quality-factor"
+						min={1}
+						max={100}
+						step={1}
+						value={config.quality}
+						oninput={(e) => onUpdate({ quality: parseInt(e.currentTarget.value) })}
+						{disabled}
+					/>
+				{:else}
+					<Slider
+						id="quality-factor"
+						min={0}
+						max={51}
+						value={config.crf}
+						oninput={(e) => onUpdate({ crf: parseInt(e.currentTarget.value) })}
+						{disabled}
+					/>
+				{/if}
 			</div>
-			<div class="text-gray-alpha-600 flex justify-between text-[9px] uppercase">
-				<span>Lossless</span>
-				<span>Smallest</span>
+			<div class="flex justify-between text-[9px] uppercase text-gray-alpha-600">
+				{#if isHardwareEncoder}
+					<span>Low Quality</span>
+					<span>Best Quality</span>
+				{:else}
+					<span>Lossless</span>
+					<span>Smallest</span>
+				{/if}
 			</div>
 		</div>
 	{:else}

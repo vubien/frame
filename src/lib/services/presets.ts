@@ -24,6 +24,7 @@ export const DEFAULT_PRESETS: PresetDefinition[] = [
 			scalingAlgorithm: 'bicubic',
 			fps: 'original',
 			crf: 23,
+			quality: 50,
 			preset: 'medium'
 		}
 	},
@@ -44,6 +45,7 @@ export const DEFAULT_PRESETS: PresetDefinition[] = [
 			scalingAlgorithm: 'lanczos',
 			fps: 'original',
 			crf: 18,
+			quality: 60,
 			preset: 'slow'
 		}
 	},
@@ -64,6 +66,7 @@ export const DEFAULT_PRESETS: PresetDefinition[] = [
 			scalingAlgorithm: 'bicubic',
 			fps: 'original',
 			crf: 30,
+			quality: 40,
 			preset: 'medium'
 		}
 	},
@@ -84,6 +87,7 @@ export const DEFAULT_PRESETS: PresetDefinition[] = [
 			scalingAlgorithm: 'bicubic',
 			fps: 'original',
 			crf: 23,
+			quality: 50,
 			preset: 'medium'
 		}
 	}
