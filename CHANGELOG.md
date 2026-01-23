@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0] - 2026-01-23
+## [0.2.0] - 2026-01-24
 
 ### Added
 
@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Native Experience:** Implemented global tab-key blocking and focus ring removal for a native application feel.
 - **Splash Screen:** Added a polished startup splash screen.
 - **Global Settings:** New "App" tab for configuring parameters like Max Concurrency.
+ 
+### Removed
+
+- **Estimation:** Removed the estimated output size panel to prioritize UI simplicity.
 
 ### Changed
 
