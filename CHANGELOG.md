@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-01-24
+
+### Changed
+
+- **Cleanup:** Further codebase cleanup.
+
 ## [0.2.1] - 2026-01-24
 
 ### Changed
@@ -28,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Native Experience:** Implemented global tab-key blocking and focus ring removal for a native application feel.
 - **Splash Screen:** Added a polished startup splash screen.
 - **Global Settings:** New "App" tab for configuring parameters like Max Concurrency.
- 
+
 ### Removed
 
 - **Estimation:** Removed the estimated output size panel to prioritize UI simplicity.
@@ -118,7 +124,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic media metadata probing via FFprobe.
 - Preset-based configuration system.
 
-[Unreleased]: https://github.com/66HEX/frame/compare/0.2.1...HEAD
+[Unreleased]: https://github.com/66HEX/frame/compare/0.2.2...HEAD
+[0.2.2]: https://github.com/66HEX/frame/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/66HEX/frame/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/66HEX/frame/compare/0.2.0-beta.4...0.2.0
 [0.2.0-beta.4]: https://github.com/66HEX/frame/compare/0.2.0-beta.3...0.2.0-beta.4
