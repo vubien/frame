@@ -20,7 +20,7 @@ pub fn run() {
         .setup(|app| {
             let mut builder =
                 WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
-                    .title("Frame")
+                    .title("")
                     .inner_size(1200.0, 800.0)
                     .min_inner_size(1200.0, 800.0)
                     .resizable(true)
