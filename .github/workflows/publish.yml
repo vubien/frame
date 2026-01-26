@@ -177,7 +177,7 @@ jobs:
           tagName: __VERSION__
           releaseName: 'v__VERSION__'
           releaseBody: ${{ steps.release_notes.outputs.BODY }}
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
           tauriScript: 'bun tauri'
