@@ -5,6 +5,8 @@
 	import ListItem from '$lib/components/ui/ListItem.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
+	import Slider from '$lib/components/ui/Slider.svelte';
+	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import { isAudioCodecAllowed } from '$lib/services/media';
 	import { _ } from '$lib/i18n';
 
@@ -90,6 +92,48 @@
 						{$_('audio.bitrateIgnored')}
 					</p>
 				{/if}
+			</div>
+
+			<div class="space-y-2 pt-1">
+				<div class="flex items-center justify-between">
+					<Label for="audio-volume">{$_('audio.volume')}</Label>
+					<span class="text-[10px] tabular-nums text-gray-alpha-600">{config.audioVolume}%</span>
+				</div>
+				<Slider
+					id="audio-volume"
+					min={0}
+					max={200}
+					step={1}
+					value={config.audioVolume}
+					oninput={(e) => onUpdate({ audioVolume: Number(e.currentTarget.value) })}
+					disabled={disabled}
+				/>
+			{#if config.audioVolume !== 100}
+				<p class="text-gray-alpha-600 text-[9px] uppercase">
+					{#if config.audioVolume === 0}
+						{$_('audio.volumeMuted')}
+					{:else if config.audioVolume < 100}
+						{$_('audio.volumeReduced')}
+					{:else}
+						{$_('audio.volumeBoosted')}
+					{/if}
+				</p>
+			{/if}
+			</div>
+
+			<div class="flex items-start gap-2 pt-2">
+				<Checkbox
+					id="audio-normalize"
+					checked={config.audioNormalize}
+					onchange={(e) => onUpdate({ audioNormalize: e.currentTarget.checked })}
+					{disabled}
+				/>
+				<div class="space-y-0.5">
+					<Label for="audio-normalize">{$_('audio.normalize')}</Label>
+					<p class="text-gray-alpha-600 text-[9px] uppercase">
+						{$_('audio.normalizeHint')}
+					</p>
+				</div>
 			</div>
 		</div>
 	</div>
