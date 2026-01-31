@@ -47,7 +47,29 @@
 		"output": "Output",
 		"video": "Video",
 		"audio": "Audio",
+		"metadata": "Metadata",
 		"presets": "Presets"
+	},
+	"metadata": {
+		"mode": "Metadata Mode",
+		"fieldsSection": "Metadata Fields",
+		"placeholderPreserve": "Leave empty to keep original",
+		"modes": {
+			"preserve": "Preserve",
+			"preserveDesc": "Keeps original metadata. Values entered below will overwrite specific fields.",
+			"clean": "Clean",
+			"cleanDesc": "Removes all metadata tags from the output file.",
+			"replace": "Replace",
+			"replaceDesc": "Removes original metadata and adds only the values entered below."
+		},
+		"fields": {
+			"title": "Title",
+			"artist": "Artist",
+			"album": "Album",
+			"genre": "Genre",
+			"date": "Date / Year",
+			"comment": "Comment"
+		}
 	},
 	"source": {
 		"analyzing": "Analyzing source…",

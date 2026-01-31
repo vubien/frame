@@ -59,6 +59,8 @@ pub struct ProbeMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub video_bitrate_kbps: Option<f64>,
     pub audio_tracks: Vec<AudioTrack>,
+    #[serde(default)]
+    pub tags: Option<FfprobeTags>,
 }
 
 pub(crate) fn parse_frame_rate_string(value: Option<&str>) -> Option<f64> {
@@ -426,6 +428,29 @@ pub struct ConversionConfig {
     pub preset: String,
     pub start_time: Option<String>,
     pub end_time: Option<String>,
+    #[serde(default)]
+    pub metadata: MetadataConfig,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct MetadataConfig {
+    pub mode: MetadataMode,
+    pub title: Option<String>,
+    pub artist: Option<String>,
+    pub album: Option<String>,
+    pub genre: Option<String>,
+    pub date: Option<String>,
+    pub comment: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum MetadataMode {
+    #[default]
+    Preserve,
+    Clean,
+    Replace,
 }
 
 fn default_quality() -> u32 {
@@ -485,12 +510,24 @@ struct FfprobeStream {
 struct FfprobeFormat {
     duration: Option<String>,
     bit_rate: Option<String>,
+    tags: Option<FfprobeTags>,
 }
 
-#[derive(Deserialize)]
-struct FfprobeTags {
-    language: Option<String>,
-    title: Option<String>,
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+pub struct FfprobeTags {
+    pub title: Option<String>,
+    pub artist: Option<String>,
+    pub album: Option<String>,
+    pub genre: Option<String>,
+    pub date: Option<String>,
+    #[serde(rename = "creation_time")]
+    pub creation_time: Option<String>,
+    pub language: Option<String>,
+    pub comment: Option<String>,
+    #[serde(rename = "DESCRIPTION")]
+    pub description_upper: Option<String>,
+    #[serde(rename = "DATE")]
+    pub date_upper: Option<String>,
 }
 
 pub fn build_ffmpeg_args(input: &str, output: &str, config: &ConversionConfig) -> Vec<String> {
@@ -510,6 +547,21 @@ pub fn build_ffmpeg_args(input: &str, output: &str, config: &ConversionConfig) -
         if !end.is_empty() {
             args.push("-to".to_string());
             args.push(end.clone());
+        }
+    }
+
+    match config.metadata.mode {
+        MetadataMode::Clean => {
+            args.push("-map_metadata".to_string());
+            args.push("-1".to_string());
+        }
+        MetadataMode::Replace => {
+            args.push("-map_metadata".to_string());
+            args.push("-1".to_string());
+            add_metadata_flags(&mut args, &config.metadata);
+        }
+        MetadataMode::Preserve => {
+            add_metadata_flags(&mut args, &config.metadata);
         }
     }
 
@@ -641,6 +693,45 @@ pub fn build_ffmpeg_args(input: &str, output: &str, config: &ConversionConfig) -
     args.push(output.to_string());
 
     args
+}
+
+fn add_metadata_flags(args: &mut Vec<String>, metadata: &MetadataConfig) {
+    if let Some(v) = &metadata.title {
+        if !v.is_empty() {
+            args.push("-metadata".to_string());
+            args.push(format!("title={}", v));
+        }
+    }
+    if let Some(v) = &metadata.artist {
+        if !v.is_empty() {
+            args.push("-metadata".to_string());
+            args.push(format!("artist={}", v));
+        }
+    }
+    if let Some(v) = &metadata.album {
+        if !v.is_empty() {
+            args.push("-metadata".to_string());
+            args.push(format!("album={}", v));
+        }
+    }
+    if let Some(v) = &metadata.genre {
+        if !v.is_empty() {
+            args.push("-metadata".to_string());
+            args.push(format!("genre={}", v));
+        }
+    }
+    if let Some(v) = &metadata.date {
+        if !v.is_empty() {
+            args.push("-metadata".to_string());
+            args.push(format!("date={}", v));
+        }
+    }
+    if let Some(v) = &metadata.comment {
+        if !v.is_empty() {
+            args.push("-metadata".to_string());
+            args.push(format!("comment={}", v));
+        }
+    }
 }
 
 fn parse_time(time_str: &str) -> Option<f64> {
@@ -911,6 +1002,10 @@ pub async fn probe_media(
     metadata.duration = probe_data.format.duration;
     metadata.bitrate = probe_data.format.bit_rate;
 
+    if let Some(tags) = probe_data.format.tags {
+        metadata.tags = Some(tags);
+    }
+
     if let Some(video_stream) = probe_data.streams.iter().find(|s| s.codec_type == "video") {
         metadata.video_codec = video_stream.codec_name.clone();
 
@@ -1019,6 +1114,8 @@ mod tests {
             preset: "medium".into(),
             start_time: None,
             end_time: None,
+            audio_normalize: false,
+            metadata: MetadataConfig::default(),
         };
 
         let args = build_ffmpeg_args("input.mov", "output.mp4", &config);
@@ -1057,6 +1154,8 @@ mod tests {
             preset: "medium".into(),
             start_time: None,
             end_time: None,
+            audio_normalize: false,
+            metadata: MetadataConfig::default(),
         };
         let args = build_ffmpeg_args("in.mp4", "out.mp4", &config);
 
@@ -1086,6 +1185,8 @@ mod tests {
             preset: "medium".into(),
             start_time: None,
             end_time: None,
+            audio_normalize: false,
+            metadata: MetadataConfig::default(),
         };
 
         let args = build_ffmpeg_args("in.mp4", "out.mp4", &config);
@@ -1116,6 +1217,8 @@ mod tests {
             preset: "slow".into(),
             start_time: None,
             end_time: None,
+            audio_normalize: false,
+            metadata: MetadataConfig::default(),
         };
         let args = build_ffmpeg_args("raw.mov", "archive.mkv", &config);
 
@@ -1148,6 +1251,8 @@ mod tests {
             preset: "medium".into(),
             start_time: None,
             end_time: None,
+            audio_normalize: false,
+            metadata: MetadataConfig::default(),
         };
         let args = build_ffmpeg_args("clip.mp4", "web.webm", &config);
 
@@ -1200,6 +1305,8 @@ mod tests {
             preset: "medium".into(),
             start_time: None,
             end_time: None,
+            audio_normalize: false,
+            metadata: MetadataConfig::default(),
         }
     }
 

@@ -37,6 +37,19 @@ export interface ConversionConfig {
 	preset: string;
 	startTime?: string;
 	endTime?: string;
+	metadata: MetadataConfig;
+}
+
+export type MetadataMode = 'preserve' | 'clean' | 'replace';
+
+export interface MetadataConfig {
+	mode: MetadataMode;
+	title?: string;
+	artist?: string;
+	album?: string;
+	genre?: string;
+	date?: string;
+	comment?: string;
 }
 
 export interface SourceMetadata {
@@ -50,6 +63,7 @@ export interface SourceMetadata {
 	height?: number;
 	videoBitrateKbps?: number;
 	audioTracks?: AudioTrack[];
+	tags?: Record<string, string>;
 }
 
 export interface FileItem {

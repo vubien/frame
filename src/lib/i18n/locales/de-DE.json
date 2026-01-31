@@ -47,7 +47,29 @@
 		"output": "Ausgabe",
 		"video": "Video",
 		"audio": "Audio",
+		"metadata": "Metadaten",
 		"presets": "Voreinstellungen"
+	},
+	"metadata": {
+		"mode": "Metadaten-Modus",
+		"fieldsSection": "Metadaten-Felder",
+		"placeholderPreserve": "Leer lassen, um Original zu behalten",
+		"modes": {
+			"preserve": "Erhalten",
+			"preserveDesc": "Behält die ursprünglichen Metadaten. Unten eingegebene Werte überschreiben bestimmte Felder.",
+			"clean": "Bereinigen",
+			"cleanDesc": "Entfernt alle Metadaten-Tags aus der Ausgabedatei.",
+			"replace": "Ersetzen",
+			"replaceDesc": "Entfernt ursprüngliche Metadaten und fügt nur die unten eingegebenen Werte hinzu."
+		},
+		"fields": {
+			"title": "Titel",
+			"artist": "Künstler",
+			"album": "Album",
+			"genre": "Genre",
+			"date": "Datum / Jahr",
+			"comment": "Kommentar"
+		}
 	},
 	"source": {
 		"analyzing": "Quelle wird analysiert…",

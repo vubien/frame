@@ -29,7 +29,10 @@ export const DEFAULT_PRESETS: PresetDefinition[] = [
 			quality: 50,
 			preset: 'medium',
 			startTime: undefined,
-			endTime: undefined
+			endTime: undefined,
+			metadata: {
+				mode: 'preserve'
+			}
 		}
 	},
 	{
@@ -54,7 +57,10 @@ export const DEFAULT_PRESETS: PresetDefinition[] = [
 			quality: 60,
 			preset: 'slow',
 			startTime: undefined,
-			endTime: undefined
+			endTime: undefined,
+			metadata: {
+				mode: 'preserve'
+			}
 		}
 	},
 	{
@@ -79,7 +85,10 @@ export const DEFAULT_PRESETS: PresetDefinition[] = [
 			quality: 40,
 			preset: 'medium',
 			startTime: undefined,
-			endTime: undefined
+			endTime: undefined,
+			metadata: {
+				mode: 'preserve'
+			}
 		}
 	},
 	{
@@ -104,7 +113,10 @@ export const DEFAULT_PRESETS: PresetDefinition[] = [
 			quality: 50,
 			preset: 'medium',
 			startTime: undefined,
-			endTime: undefined
+			endTime: undefined,
+			metadata: {
+				mode: 'preserve'
+			}
 		}
 	},
 	{
@@ -129,7 +141,10 @@ export const DEFAULT_PRESETS: PresetDefinition[] = [
 			quality: 50,
 			preset: 'medium',
 			startTime: undefined,
-			endTime: undefined
+			endTime: undefined,
+			metadata: {
+				mode: 'preserve'
+			}
 		}
 	},
 	{
@@ -154,7 +169,10 @@ export const DEFAULT_PRESETS: PresetDefinition[] = [
 			quality: 50,
 			preset: 'medium',
 			startTime: undefined,
-			endTime: undefined
+			endTime: undefined,
+			metadata: {
+				mode: 'preserve'
+			}
 		}
 	},
 	{
@@ -179,7 +197,10 @@ export const DEFAULT_PRESETS: PresetDefinition[] = [
 			quality: 50,
 			preset: 'medium',
 			startTime: undefined,
-			endTime: undefined
+			endTime: undefined,
+			metadata: {
+				mode: 'preserve'
+			}
 		}
 	}
 ];

@@ -14,8 +14,9 @@
 	import PresetsTab from './tabs/PresetsTab.svelte';
 	import VideoTab from './tabs/VideoTab.svelte';
 	import AudioTab from './tabs/AudioTab.svelte';
+	import MetadataTab from './tabs/MetadataTab.svelte';
 
-	const TABS = ['source', 'output', 'video', 'audio', 'presets'] as const;
+	const TABS = ['source', 'output', 'video', 'audio', 'metadata', 'presets'] as const;
 	type TabId = (typeof TABS)[number];
 
 	let {
@@ -90,6 +91,8 @@
 			/>
 		{:else if activeTab === 'video'}
 			<VideoTab {config} {disabled} {onUpdate} />
+		{:else if activeTab === 'metadata'}
+			<MetadataTab {config} {disabled} {onUpdate} {metadata} />
 		{:else}
 			<AudioTab {config} {disabled} {onUpdate} {metadata} />
 		{/if}

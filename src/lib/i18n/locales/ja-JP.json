@@ -47,7 +47,29 @@
 		"output": "出力",
 		"video": "ビデオ",
 		"audio": "オーディオ",
+		"metadata": "メタデータ",
 		"presets": "プリセット"
+	},
+	"metadata": {
+		"mode": "メタデータモード",
+		"fieldsSection": "メタデータフィールド",
+		"placeholderPreserve": "空欄でオリジナルを保持",
+		"modes": {
+			"preserve": "保持",
+			"preserveDesc": "元のメタデータを保持します。入力された値は特定のフィールドを上書きします。",
+			"clean": "削除",
+			"cleanDesc": "出力ファイルからすべてのメタデータタグを削除します。",
+			"replace": "置換",
+			"replaceDesc": "元のメタデータを削除し、以下に入力された値のみを追加します。"
+		},
+		"fields": {
+			"title": "タイトル",
+			"artist": "アーティスト",
+			"album": "アルバム",
+			"genre": "ジャンル",
+			"date": "日付 / 年",
+			"comment": "コメント"
+		}
 	},
 	"source": {
 		"analyzing": "ソースを分析中…",

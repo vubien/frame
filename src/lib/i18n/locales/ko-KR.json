@@ -47,7 +47,29 @@
 		"output": "출력",
 		"video": "비디오",
 		"audio": "오디오",
+		"metadata": "메타데이터",
 		"presets": "프리셋"
+	},
+	"metadata": {
+		"mode": "메타데이터 모드",
+		"fieldsSection": "메타데이터 필드",
+		"placeholderPreserve": "원본 유지를 위해 비워두세요",
+		"modes": {
+			"preserve": "보존",
+			"preserveDesc": "원본 메타데이터를 유지합니다. 입력된 값은 특정 필드를 덮어씁니다.",
+			"clean": "지우기",
+			"cleanDesc": "출력 파일에서 모든 메타데이터 태그를 제거합니다.",
+			"replace": "교체",
+			"replaceDesc": "원본 메타데이터를 제거하고 아래에 입력된 값만 추가합니다."
+		},
+		"fields": {
+			"title": "제목",
+			"artist": "아티스트",
+			"album": "앨범",
+			"genre": "장르",
+			"date": "날짜 / 연도",
+			"comment": "코멘트"
+		}
 	},
 	"source": {
 		"analyzing": "소스 분석 중…",

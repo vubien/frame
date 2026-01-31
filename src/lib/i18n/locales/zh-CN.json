@@ -47,7 +47,29 @@
 		"output": "输出",
 		"video": "视频",
 		"audio": "音频",
+		"metadata": "元数据",
 		"presets": "预设"
+	},
+	"metadata": {
+		"mode": "元数据模式",
+		"fieldsSection": "元数据字段",
+		"placeholderPreserve": "留空以保留原始值",
+		"modes": {
+			"preserve": "保留",
+			"preserveDesc": "保留原始元数据。下方输入的值将覆盖特定字段。",
+			"clean": "清除",
+			"cleanDesc": "从输出文件中移除所有元数据标签。",
+			"replace": "替换",
+			"replaceDesc": "移除原始元数据，仅添加下方输入的值。"
+		},
+		"fields": {
+			"title": "标题",
+			"artist": "艺术家",
+			"album": "专辑",
+			"genre": "流派",
+			"date": "日期 / 年份",
+			"comment": "注释"
+		}
 	},
 	"source": {
 		"analyzing": "正在分析源文件…",
