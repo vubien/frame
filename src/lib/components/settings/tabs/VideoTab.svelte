@@ -118,7 +118,7 @@
 					{#each ['0', '90', '180', '270'] as deg (deg)}
 						<Button
 							variant={config.rotation === deg ? 'selected' : 'outline'}
-							onclick={() => onUpdate({ rotation: deg as any })}
+							onclick={() => onUpdate({ rotation: deg as ConversionConfig['rotation'] })}
 							{disabled}
 							class="w-full"
 						>
